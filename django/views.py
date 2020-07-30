@@ -1,11 +1,7 @@
-from django.shortcuts import render
 from .models import Users
 from .forms import TransferForm
 from django.contrib.auth.models import User
-from django.views.generic import View
 from django.views.generic.edit import FormView
-from django.db import transaction
-# from django.http import HttpResponse
 
 
 class TransferView(FormView):
@@ -20,8 +16,9 @@ class TransferView(FormView):
         return self.render_to_response(ctx)
 
     def post(self, request, *args, **kwargs):
-        
         ctx = self.get_context_data(**kwargs)
+        ctx['userlist'] = self.userlist()
+
         amount = float(request.POST['amount'])
         sum_part = 0
 
@@ -37,7 +34,6 @@ class TransferView(FormView):
             users_count = 0
             
             if inn_to and acc_sum >= amount:
-                
                 users_count = len(inn_to)
                 sum_part = round(amount / users_count, 2)
 
@@ -61,12 +57,11 @@ class TransferView(FormView):
             acc_sum = 0
             ctx['op_result'] = 'На счёте недостаточно средств'
 
-        ctx['userlist'] = self.userlist()
-
         return self.render_to_response(ctx)
 
     def userlist(self):
         user_list = []
+
         for i in User.objects.all():
             cur_user = {}
             cur_user['id'] = i.id
@@ -76,4 +71,5 @@ class TransferView(FormView):
                 cur_user['inn'] = tmp.inn
                 cur_user['account'] = tmp.account
             user_list.append(cur_user)
+
         return user_list
